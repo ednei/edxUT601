@@ -1,0 +1,5 @@
+Dependencies for Project 'Lab6', Target 'Lab6': (DO NOT MODIFY !)
+F (.\startup.s)(0x5198013A)()
+F (.\BranchingFunctionsDelays.c)(0x5300306B)()
+I (TExaS.h)(0x52A04D1A)
+F (.\texas.o)(0x52CD5728)()

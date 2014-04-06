@@ -1,0 +1,6 @@
+/lst/
+/obj/
+*.build_log.htm
+*.uvgui.ednei.alves
+*.uvgui.ednei_alves.bak
+*.o

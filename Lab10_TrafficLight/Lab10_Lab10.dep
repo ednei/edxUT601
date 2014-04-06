@@ -1,0 +1,6 @@
+Dependencies for Project 'Lab10', Target 'Lab10': (DO NOT MODIFY !)
+F (.\startup.s)(0x5199459E)()
+F (.\TableTrafficLight.c)(0x5341BEC5)()
+I (TExaS.h)(0x529E49C6)
+I (..\tm4c123gh6pm.h)(0x51D49AE2)
+F (.\texas.o)(0x52EBF01C)()
