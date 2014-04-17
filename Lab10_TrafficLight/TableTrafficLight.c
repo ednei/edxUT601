@@ -43,16 +43,20 @@ typedef enum t_WalkSemaphoroState{
 //Fist letter is walk semaphoro current output, second south semaphoro, third west semaphoro
 // N = Semaphoro off, R = Semaphoro Red, G = Semaphoro Green, Y = Semaphoro Yellow 
 typedef enum t_IntersectionState{
-	NNN,
-	RRR,
-	RRG,
-	RRY,
-	RGR,
-	RYR,
-	GRR,
-	NRR
+	N_NNN,
+	N_RRR,
+	N_RRG,
+	N_RRY,
+	N_RGR,
+	N_RYR,
+	N_GRR,
+	A_NRR,
+	A_RRR,
+	A_RRG,
+	A_RGR,
+	A_GRR
 }IntersectionState;
-#define MAX_INTERSECTION_STATES (1+NRR) //<= must to be always the last enum value
+#define MAX_INTERSECTION_STATES (1+A_GRR) //<= must to be always the last enum value
 
 typedef struct t_IntersectionStateInfo{
 	StreetSemaphoroState WestStreetSemaphoro:4;
@@ -66,15 +70,19 @@ typedef struct t_IntersectionStateInfo{
 
 /*Rules: 1) Walkers have priority 2) South have priority over West 3) Semaphoro cant go from green to yellow and then back to green*/
 const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
-// West								      South									   Walk									 Time				 		 	      [000  001  010  011  100  101  110  111] <= Possible inputs:[walk,south,west]
-	{STREET_SEMAPHORO_OFF		 ,STREET_SEMAPHORO_OFF		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{RRR, NNN, NNN, NNN, NNN, NNN, NNN, NNN}}, //State NNN
-	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{RRR, RRG, RGR, RGR, GRR, GRR, GRR, NRR}}, //State RRR P1
-	{STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{RRG, RRG, RRY, RRY, RRY, RRY, RRY, RRR}}, //State RRG P2
-	{STREET_SEMAPHORO_YELLOW ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{RRR, RRR, RGR, RGR, GRR, GRR, GRR, RRR}}, //State RRY
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{RGR, RYR, RGR, RGR, RYR, RYR, RYR, RRR}}, //State RGR
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_YELLOW	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{RRR, RRG, RRR, RRR, GRR, GRR, GRR, RRR}}, //State RYR	
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{GRR, RRG, RGR, RGR, GRR, GRR, GRR, RRR}}, //State GRR
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{RRR, RRG, RGR, RGR, GRR, GRR, GRR, RRR}}  //State NRR
+// West								      South									   Walk									 Time				 		 	      [  000    001    010    011    100    101    110    111] <= Possible inputs:[walk,south,west]
+	{STREET_SEMAPHORO_OFF		 ,STREET_SEMAPHORO_OFF		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{N_RRR, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN}}, //State N_NNN
+	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_NRR}}, //State N_RRR P1
+	{STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRG, N_RRG, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY, N_RRR}}, //State N_RRG P2
+	{STREET_SEMAPHORO_YELLOW ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_RRY
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RGR, N_RYR, N_RGR, N_RGR, N_RYR, N_RYR, N_RYR, N_RRR}}, //State N_RGR
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_YELLOW	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RRR, N_RRR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_RYR	
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_GRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_GRR
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RRR}}, //State A_NRR
+	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RRG}}, //State A_RRR
+	{STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RGR}}, //State A_RRG
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_GRR}}, //State A_RGR
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}  //State A_GRR
 };
 
 // ***** 2. Global Declarations Section *****
@@ -100,7 +108,7 @@ int main(void){
 	EnableInterrupts();
 	SysTick_Init();
   Port_Init();
-	currentIntersectionState = NNN;
+	currentIntersectionState = N_NNN;
   while(1){
 		UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
 		SysTick_Wait100ms(TRANSACTION_DELAY_SECS);
@@ -178,7 +186,7 @@ void SysTick_Wait(unsigned long delay){
 void SysTick_Wait100ms(unsigned long delay){
   unsigned long i;
   for(i=0; i<delay; i++){
-    SysTick_Wait(800000);  // wait 100ms
+    SysTick_Wait(8000000);  // wait 100ms
   }
 }
 
