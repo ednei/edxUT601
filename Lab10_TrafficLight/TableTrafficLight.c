@@ -43,7 +43,7 @@ typedef enum t_WalkSemaphoroState{
 //Fist letter is walk semaphoro current output, second south semaphoro, third west semaphoro
 // N = Semaphoro off, R = Semaphoro Red, G = Semaphoro Green, Y = Semaphoro Yellow 
 typedef enum t_IntersectionState{
-	N_NNN,
+	N_NRR,
 	N_RRR,
 	N_RRG,
 	N_RRY,
@@ -51,17 +51,13 @@ typedef enum t_IntersectionState{
 	N_RYR,
 	N_GRR,
 	A_NRR,
-	A_RRR,
-	A_RRG,
-	A_RGR,
-	A_GRR
+	A_RRR
 }IntersectionState;
-#define MAX_INTERSECTION_STATES (1+A_GRR) //<= must to be always the last enum value
+#define MAX_INTERSECTION_STATES (1+A_RRR) //<= must to be always the last enum value
 
 typedef struct t_IntersectionStateInfo{
-	StreetSemaphoroState WestStreetSemaphoro:4;
-	StreetSemaphoroState SouthStreetSemaphoro:4;
-	WalkSemaphoroState walkSemaphoro:5;
+	unsigned long StreetSemaphoro;
+	unsigned long WalkSemaphoro;
 	unsigned long TrasintionDelaySecs;
 	IntersectionState NextState[8];
 }IntersectionStateInfo;
@@ -70,19 +66,16 @@ typedef struct t_IntersectionStateInfo{
 
 /*Rules: 1) Walkers have priority 2) South have priority over West 3) Semaphoro cant go from green to yellow and then back to green*/
 const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
-// West								      South									   Walk									 Time				 		 	      [  000    001    010    011    100    101    110    111] <= Possible inputs:[walk,south,west]
-	{STREET_SEMAPHORO_OFF		 ,STREET_SEMAPHORO_OFF		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{N_RRR, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN, N_NNN}}, //State N_NNN
-	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_NRR}}, //State N_RRR P1
-	{STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRG, N_RRG, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY, N_RRR}}, //State N_RRG P2
-	{STREET_SEMAPHORO_YELLOW ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_RRY
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RGR, N_RYR, N_RGR, N_RGR, N_RYR, N_RYR, N_RYR, N_RRR}}, //State N_RGR
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_YELLOW	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RRR, N_RRR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_RYR	
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_GRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}, //State N_GRR
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RRR}}, //State A_NRR
-	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RRG}}, //State A_RRR
-	{STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_RGR}}, //State A_RRG
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, A_GRR}}, //State A_RGR
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RRR}}  //State A_GRR
+// 		 	      [   000    001    010    011    100    101    110    111] <= Possible inputs:[walk,south,west]
+	{0x24,0x00,1,{N_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, A_RRR}}, //State N_NRR
+	{0x24,0x02,1,{N_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_NRR}}, //State N_RRR 
+	{0x0C,0x02,1,{N_RRG, N_RRG, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY}}, //State N_RRG 
+	{0x14,0x02,1,{N_RRY, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RGR}}, //State N_RRY
+	{0x21,0x02,1,{N_RGR, N_RYR, N_RGR, N_RYR, N_RYR, N_RYR, N_RYR, N_RYR}}, //State N_RGR
+	{0x22,0x02,1,{N_RYR, N_RRG, N_RRR, N_RRG, N_GRR, N_GRR, N_GRR, N_GRR}}, //State N_RYR	
+	{0x24,0x08,1,{N_GRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR}}, //State N_GRR
+	{0x24,0x00,1,{A_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_RRG}}, //State A_NRR  
+	{0x24,0x02,1,{A_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, A_NRR}}, //State A_RRR
 };
 
 // ***** 2. Global Declarations Section *****
@@ -94,25 +87,33 @@ void EnableInterrupts(void);  // Enable interrupts
 // ***** 3. Subroutines Section *****
 
 void SysTick_Init(void);
-void SysTick_Wait100ms(unsigned long delay);
+void SysTick_Wait10ms(unsigned long delay);
 void UpdateSemaphoros(IntersectionStateInfo stateInfo);
 
 void Port_Init(void);
 
 unsigned long ReadSensors(void);
+unsigned long currentSensorState;
+IntersectionState currentIntersectionState;
+
+#define LIGHT                   (*((volatile unsigned long *)0x400050FC))
+
+
 
 int main(void){ 
-	unsigned long currentSensorState;
-	IntersectionState currentIntersectionState;
-  TExaS_Init(SW_PIN_PE210, LED_PIN_PB543210); // activate grader and set system clock to 80 MHz
-	EnableInterrupts();
+	TExaS_Init(SW_PIN_PE210, LED_PIN_PB543210); // activate grader and set system clock to 80 MHz
+	Port_Init();
 	SysTick_Init();
-  Port_Init();
-	currentIntersectionState = N_NNN;
+	EnableInterrupts();
+	currentIntersectionState = N_RRR;
+	currentSensorState = 0;
   while(1){
-		UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
-		SysTick_Wait100ms(TRANSACTION_DELAY_SECS);
-		currentSensorState = ReadSensors();
+		//UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
+		GPIO_PORTB_DATA_R=IntersectionMachine[currentIntersectionState].StreetSemaphoro;
+		//LIGHT =IntersectionMachine[currentIntersectionState].StreetSemaphoro;
+		GPIO_PORTF_DATA_R=IntersectionMachine[currentIntersectionState].WalkSemaphoro;
+	  SysTick_Wait10ms(IntersectionMachine[currentIntersectionState].TrasintionDelaySecs);
+	  currentSensorState = GPIO_PORTE_DATA_R; //ReadSensors();
 		currentIntersectionState = IntersectionMachine[currentIntersectionState].NextState[currentSensorState];
   }
 }
@@ -121,7 +122,7 @@ unsigned long ReadSensors(){
 	return GPIO_PORTE_DATA_R & 0x07;
 }
 
-void UpdateStreetSemaphoro(StreetSemaphoroId streetSemaphoroId, StreetSemaphoroState semaphoroState){
+/*void UpdateStreetSemaphoro(StreetSemaphoroId streetSemaphoroId, StreetSemaphoroState semaphoroState){
 	unsigned long semaphoroMask = 0x00;
 	unsigned long semaphoroClean = 0x07;
 		
@@ -166,7 +167,7 @@ void UpdateSemaphoros(IntersectionStateInfo stateInfo){
 	UpdateStreetSemaphoro(WEST,stateInfo.WestStreetSemaphoro);
 	UpdateStreetSemaphoro(SOUTH,stateInfo.SouthStreetSemaphoro);
 	UpdateWalkSemaphoro(stateInfo.walkSemaphoro);
-}
+}*/
 	
 void SysTick_Init(void){
   NVIC_ST_CTRL_R = 0;                   // disable SysTick during setup
@@ -182,11 +183,11 @@ void SysTick_Wait(unsigned long delay){
   while((NVIC_ST_CTRL_R&0x00010000)==0){ // wait for count flag
   }
 }
-// 8000000*12.5ns equals 100ms
-void SysTick_Wait100ms(unsigned long delay){
+// 800000*12.5ns equals 10ms
+void SysTick_Wait10ms(unsigned long delay){
   unsigned long i;
   for(i=0; i<delay; i++){
-    SysTick_Wait(8000000);  // wait 100ms
+    SysTick_Wait(800000);  // wait 10ms
   }
 }
 
@@ -195,7 +196,7 @@ void PortE_Init(void)
 {
 	//1) Enable Port clock was already done on function Port_Init
 	//2) unlock GPIO is unnecessary for Port E
-  GPIO_PORTE_AMSEL_R  = 0x00;         //3)All pins set as digital signal.
+  GPIO_PORTE_AMSEL_R &= ~0x07;         //3)All pins set as digital signal.
   GPIO_PORTE_PCTL_R  &= ~0x00000FFF;	//4)PE0, PE1, PE2 Pins set as standard GPIO
   GPIO_PORTE_DIR_R   &= ~0x07;      	//5)PE0, PE1, PE2 are inputs
   GPIO_PORTE_AFSEL_R &= ~0x07;        //6)PE0, PE1, PE2 don't use alernative function
@@ -209,9 +210,9 @@ void PortB_Init(void)
 {
 	//1) Enable Port clock was already done on function Port_Init
 	//2) unlock GPIO is unnecessary for Port B
-  GPIO_PORTB_AMSEL_R  = 0x00;      		//3) All pins set as digital signal.
+  GPIO_PORTB_AMSEL_R &= ~0x3F;      		//3) All pins set as digital signal.
   GPIO_PORTB_PCTL_R  &= ~0x00FFFFFF;	//4) PB0, PB1, PB2, PB3, PB4, PB5 Pins set as standard GPIO
-  GPIO_PORTB_DIR_R	 |= 0x3F;       	//5) PB0, PB1, PB2, PB3, PB4, PB5 are outputs
+  GPIO_PORTB_DIR_R	 |=  0x3F;       	//5) PB0, PB1, PB2, PB3, PB4, PB5 are outputs
   GPIO_PORTB_AFSEL_R &= ~0x3F;        //6) PB0, PB1, PB2, PB3, PB4, PB5 don't use alternative function
   GPIO_PORTB_PUR_R   &= ~0x3F;        //7) Disable pull-up on PB0, PB1, PB2, PB3, PB4, PB5
 	GPIO_PORTB_PDR_R   &= ~0x3F;        //8) Disable pull-down on PB0, PB1, PB2, PB3, PB4, PB5
@@ -220,16 +221,16 @@ void PortB_Init(void)
 
 void PortF_Init(void)
 {
-	GPIO_PORTF_LOCK_R = 0x4C4F434B;   // 2.1) unlock GPIO Port F
-  GPIO_PORTF_CR_R = 0x1F;           // 2.2)allow changes to PF4-0
+	GPIO_PORTF_LOCK_R = 0x4C4F434B;   	// 2.1) unlock GPIO Port F
+  GPIO_PORTF_CR_R = 0x1F;           	// 2.2)allow changes to PF4-0
   // only PF0 needs to be unlocked, other bits can't be locked
-  GPIO_PORTB_AMSEL_R  = 0x00;      	//3) disable analog on PB
-  GPIO_PORTF_PCTL_R   = 0x0000F0F0;	//4)All Pins set as standard GPIO
-  GPIO_PORTF_DIR_R 	 |= 0x0A;       //5)PF1 and PF3 will be outputs
-  GPIO_PORTF_AFSEL_R &= ~0x0A;      //6)PF1 and PF3 dont use alternative function
-  GPIO_PORTF_PUR_R   &= ~0x0A;      //7)Disable pull-up on PF1 and PF3
-	GPIO_PORTF_PDR_R   &= ~0x0A;      //8)Disable pull-down on PF1 and PF3
-  GPIO_PORTF_DEN_R   |=  0x0A;      //Enable digital I/O on PF1 and PF3
+  GPIO_PORTF_AMSEL_R &=  0x0A;      	//3) disable analog on PB
+  GPIO_PORTF_PCTL_R  &= ~0x0000F0F0;	//4)All Pins set as standard GPIO
+  GPIO_PORTF_DIR_R 	 |=  0x0A;       	//5)PF1 and PF3 will be outputs
+  GPIO_PORTF_AFSEL_R &= ~0x0A;      	//6)PF1 and PF3 dont use alternative function
+  GPIO_PORTF_PUR_R   &= ~0x0A;      	//7)Disable pull-up on PF1 and PF3
+	GPIO_PORTF_PDR_R   &= ~0x0A;      	//8)Disable pull-down on PF1 and PF3
+  GPIO_PORTF_DEN_R   |=  0x0A;      	//Enable digital I/O on PF1 and PF3
 }
 
 void Port_Init(void)

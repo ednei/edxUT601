@@ -5,3 +5,11 @@
 /Lab9.uvgui.ednei_alves.bak
 *.o
 *.build_log.htm
+/main.crf
+/main.d
+/startup.d
+/startup.lst
+/Lab9.axf
+/Lab9.htm
+/Lab9.lnp
+/Lab9.map
