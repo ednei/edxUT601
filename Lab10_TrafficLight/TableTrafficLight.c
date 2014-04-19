@@ -53,12 +53,12 @@ typedef enum t_IntersectionState{
 typedef struct t_IntersectionStateInfo{
 	StreetSemaphoroState WestStreetSemaphoro:3;
 	StreetSemaphoroState SouthStreetSemaphoro:3;
-	WalkSemaphoroState walkSemaphoro:2;
+	WalkSemaphoroState walkSemaphoro:3;
 	unsigned long TrasintionDelaySecs;
 	IntersectionState NextState[8];
 }IntersectionStateInfo;
 
-#define TRANSACTION_DELAY_SECS 1
+#define TRANSACTION_DELAY_SECS 50
 
 /*Rules: 1) Walkers have priority 2) South have priority over West 3) Semaphoro cant go from green to yellow and then back to green*/
 const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
@@ -69,7 +69,7 @@ const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
 	{STREET_SEMAPHORO_YELLOW ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRY, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RGR}}, //State N_RRY
 	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RGR, N_RYR, N_RGR, N_RYR, N_RYR, N_RYR, N_RYR, N_RYR}}, //State N_RGR
 	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_YELLOW	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RYR, N_RRG, N_RRR, N_RRG, N_GRR, N_GRR, N_GRR, N_GRR}}, //State N_RYR	
-	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_GRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR}}, //State N_GRR
+	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_GRR, N_RRR, N_RRR, N_RRR, N_GRR, N_RRR, N_RRR, N_RRR}}, //State N_GRR
 	{STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{B_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_RRG}}, //State B_NRR
 	{STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{B_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, B_NRR}}  //State B_RRR
 };
@@ -94,7 +94,7 @@ int main(void){
 	SysTick_Init();
 	EnableInterrupts();
 	currentIntersectionState = N_RRR;
-  while(1){
+	while(1){
 		UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
 	  SysTick_Wait10ms(IntersectionMachine[currentIntersectionState].TrasintionDelaySecs);
 		currentIntersectionState = IntersectionMachine[currentIntersectionState].NextState[ReadSensors()];
