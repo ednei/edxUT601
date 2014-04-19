@@ -27,16 +27,16 @@ typedef enum t_StreetSemaphoroId{
 } StreetSemaphoroId;
 
 typedef enum t_StreetSemaphoroState{
-	STREET_SEMAPHORO_OFF    = 0x00,
-	STREET_SEMAPHORO_RED	  =	0x01,
-	STREET_SEMAPHORO_GREEN  =	0x02,
-	STREET_SEMAPHORO_YELLOW = 0x04
+	STREET_SEMAPHORO_OFF,
+	STREET_SEMAPHORO_RED,	
+	STREET_SEMAPHORO_GREEN,
+	STREET_SEMAPHORO_YELLOW
 }StreetSemaphoroState;
 
 typedef enum t_WalkSemaphoroState{
-	WALK_SEMAPHORO_OFF	 = 0x00,
-	WALK_SEMAPHORO_RED   = 0x02,
-	WALK_SEMAPHORO_GREEN = 0x08
+	WALK_SEMAPHORO_OFF,
+	WALK_SEMAPHORO_RED,
+	WALK_SEMAPHORO_GREEN
 }WalkSemaphoroState;
 	
 
@@ -50,14 +50,17 @@ typedef enum t_IntersectionState{
 	N_RGR,
 	N_RYR,
 	N_GRR,
-	A_NRR,
-	A_RRR
+	B_NRR,
+	B_RRR
 }IntersectionState;
-#define MAX_INTERSECTION_STATES (1+A_RRR) //<= must to be always the last enum value
+#define MAX_INTERSECTION_STATES (1+B_RRR) //<= must to be always the last enum value
 
 typedef struct t_IntersectionStateInfo{
 	unsigned long StreetSemaphoro;
 	unsigned long WalkSemaphoro;
+	StreetSemaphoroState WestStreetSemaphoro:4;
+	StreetSemaphoroState SouthStreetSemaphoro:4;
+	WalkSemaphoroState walkSemaphoro:5;
 	unsigned long TrasintionDelaySecs;
 	IntersectionState NextState[8];
 }IntersectionStateInfo;
@@ -67,15 +70,25 @@ typedef struct t_IntersectionStateInfo{
 /*Rules: 1) Walkers have priority 2) South have priority over West 3) Semaphoro cant go from green to yellow and then back to green*/
 const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
 // 		 	      [   000    001    010    011    100    101    110    111] <= Possible inputs:[walk,south,west]
-	{0x24,0x00,1,{N_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, A_RRR}}, //State N_NRR
+/*{0x24,0x00,1,{N_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, B_RRR}}, //State N_NRR
 	{0x24,0x02,1,{N_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_NRR}}, //State N_RRR 
 	{0x0C,0x02,1,{N_RRG, N_RRG, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY}}, //State N_RRG 
 	{0x14,0x02,1,{N_RRY, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RGR}}, //State N_RRY
 	{0x21,0x02,1,{N_RGR, N_RYR, N_RGR, N_RYR, N_RYR, N_RYR, N_RYR, N_RYR}}, //State N_RGR
 	{0x22,0x02,1,{N_RYR, N_RRG, N_RRR, N_RRG, N_GRR, N_GRR, N_GRR, N_GRR}}, //State N_RYR	
 	{0x24,0x08,1,{N_GRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR}}, //State N_GRR
-	{0x24,0x00,1,{A_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_RRG}}, //State A_NRR  
-	{0x24,0x02,1,{A_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, A_NRR}}, //State A_RRR
+	{0x24,0x00,1,{B_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_RRG}}, //State B_NRR  
+	{0x24,0x02,1,{B_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, B_NRR}}, //State B_RRR*/
+	
+	{0x24,0x00,STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, B_RRR}}, //State N_NRR
+	{0x24,0x02,STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_NRR}}, //State N_RRR P1
+	{0x0C,0x02,STREET_SEMAPHORO_GREEN  ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRG, N_RRG, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY, N_RRY}}, //State N_RRG P2
+	{0x14,0x02,STREET_SEMAPHORO_YELLOW ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RRY, N_RRR, N_RGR, N_RGR, N_GRR, N_GRR, N_GRR, N_RGR}}, //State N_RRY
+	{0x21,0x02,STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_GREEN	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RGR, N_RYR, N_RGR, N_RYR, N_RYR, N_RYR, N_RYR, N_RYR}}, //State N_RGR
+	{0x22,0x02,STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_YELLOW	,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{N_RYR, N_RRG, N_RRR, N_RRG, N_GRR, N_GRR, N_GRR, N_GRR}}, //State N_RYR	
+	{0x24,0x08,STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_GREEN	,TRANSACTION_DELAY_SECS,{N_GRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR, N_RRR}}, //State N_GRR
+	{0x24,0x00,STREET_SEMAPHORO_RED    ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_OFF		,TRANSACTION_DELAY_SECS,{B_NRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, N_RRG}}, //State B_NRR
+	{0x24,0x02,STREET_SEMAPHORO_RED		 ,STREET_SEMAPHORO_RED		,WALK_SEMAPHORO_RED		,TRANSACTION_DELAY_SECS,{B_RRR, N_RRG, N_RGR, N_RRG, N_GRR, N_GRR, N_GRR, B_NRR}}  //State B_RRR
 };
 
 // ***** 2. Global Declarations Section *****
@@ -83,38 +96,25 @@ const IntersectionStateInfo IntersectionMachine[MAX_INTERSECTION_STATES]={
 // FUNCTION PROTOTYPES: Each subroutine defined
 void DisableInterrupts(void); // Disable interrupts
 void EnableInterrupts(void);  // Enable interrupts
-
-// ***** 3. Subroutines Section *****
-
+void Port_Init(void);
 void SysTick_Init(void);
 void SysTick_Wait10ms(unsigned long delay);
 void UpdateSemaphoros(IntersectionStateInfo stateInfo);
-
-void Port_Init(void);
-
 unsigned long ReadSensors(void);
-unsigned long currentSensorState;
-IntersectionState currentIntersectionState;
 
-#define LIGHT                   (*((volatile unsigned long *)0x400050FC))
-
-
+// ***** 3. Subroutines Section *****
 
 int main(void){ 
+	IntersectionState currentIntersectionState;
 	TExaS_Init(SW_PIN_PE210, LED_PIN_PB543210); // activate grader and set system clock to 80 MHz
 	Port_Init();
 	SysTick_Init();
 	EnableInterrupts();
 	currentIntersectionState = N_RRR;
-	currentSensorState = 0;
   while(1){
-		//UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
-		GPIO_PORTB_DATA_R=IntersectionMachine[currentIntersectionState].StreetSemaphoro;
-		//LIGHT =IntersectionMachine[currentIntersectionState].StreetSemaphoro;
-		GPIO_PORTF_DATA_R=IntersectionMachine[currentIntersectionState].WalkSemaphoro;
+		UpdateSemaphoros(IntersectionMachine[currentIntersectionState]);
 	  SysTick_Wait10ms(IntersectionMachine[currentIntersectionState].TrasintionDelaySecs);
-	  currentSensorState = GPIO_PORTE_DATA_R; //ReadSensors();
-		currentIntersectionState = IntersectionMachine[currentIntersectionState].NextState[currentSensorState];
+		currentIntersectionState = IntersectionMachine[currentIntersectionState].NextState[ReadSensors()];
   }
 }
 
@@ -122,11 +122,10 @@ unsigned long ReadSensors(){
 	return GPIO_PORTE_DATA_R & 0x07;
 }
 
-/*void UpdateStreetSemaphoro(StreetSemaphoroId streetSemaphoroId, StreetSemaphoroState semaphoroState){
+void UpdateStreetSemaphoro(StreetSemaphoroState westSemaphoroState,StreetSemaphoroState southSemaphoroState){
 	unsigned long semaphoroMask = 0x00;
-	unsigned long semaphoroClean = 0x07;
 		
-	switch(semaphoroState){
+	switch(westSemaphoroState){
 			case STREET_SEMAPHORO_OFF:
 				break;
 			case STREET_SEMAPHORO_RED:
@@ -139,35 +138,43 @@ unsigned long ReadSensors(){
 			default:
 				semaphoroMask = 0x01;//for security by defaulf semaphoro is red
 		}
+		semaphoroMask <<= 3;
 		
-		if(streetSemaphoroId == WEST){
-				semaphoroMask  <<=3;
-				semaphoroClean <<=3;
+		switch(southSemaphoroState){
+			case STREET_SEMAPHORO_OFF:
+				break;
+			case STREET_SEMAPHORO_RED:
+				semaphoroMask |= 0x04;
+				break;
+			case STREET_SEMAPHORO_YELLOW:
+				semaphoroMask |= 0x02;
+				break;
+			case STREET_SEMAPHORO_GREEN:
+			default:
+				semaphoroMask |= 0x01;//for security by defaulf semaphoro is red
 		}
-	
-		GPIO_PORTB_DATA_R &= ~semaphoroClean;
-		GPIO_PORTB_DATA_R |= semaphoroMask;
+		
+		GPIO_PORTB_DATA_R = semaphoroMask;
 }
 
 void UpdateWalkSemaphoro(WalkSemaphoroState walkSemaphoroState ){
-	GPIO_PORTF_DATA_R &= ~0x0A;
 	switch(walkSemaphoroState){
 		case WALK_SEMAPHORO_OFF:
+			GPIO_PORTF_DATA_R = 0x00;
 			break;
 		case WALK_SEMAPHORO_GREEN:
-			GPIO_PORTF_DATA_R |= 0x08;
+			GPIO_PORTF_DATA_R = 0x08;
 			break;
 		case WALK_SEMAPHORO_RED:
 		default:
-			GPIO_PORTF_DATA_R |= 0x02;
+			GPIO_PORTF_DATA_R = 0x02;
 	}		
 }
 
 void UpdateSemaphoros(IntersectionStateInfo stateInfo){
-	UpdateStreetSemaphoro(WEST,stateInfo.WestStreetSemaphoro);
-	UpdateStreetSemaphoro(SOUTH,stateInfo.SouthStreetSemaphoro);
+	UpdateStreetSemaphoro(stateInfo.WestStreetSemaphoro,stateInfo.SouthStreetSemaphoro);
 	UpdateWalkSemaphoro(stateInfo.walkSemaphoro);
-}*/
+}
 	
 void SysTick_Init(void){
   NVIC_ST_CTRL_R = 0;                   // disable SysTick during setup
